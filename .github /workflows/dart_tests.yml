@@ -2,28 +2,27 @@ name: Dart tests and analysis
 
 on:
   push:
-    branches: [main]
+    branches: ["main"]
   pull_request:
-    branches: [main]
+    branches: ["main"]
 
 jobs:
-  test:
-    name: Analysis and Tests
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Setup Repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
+      - uses: dart-lang/setup-dart@v1
+      - uses: dart-lang/setup-dart@9a04e6d73cca37bd455e0608d7e5092f881fd603
 
-      - name: Install Pub Dependencies
+      - name: Install dependencies
         run: dart pub get
 
-      - name: Verify Formatting
+      - name: Verify formatting
         run: dart format --output=none --set-exit-if-changed .
 
-      - name: Analyze Project Source
+      - name: Analyze project source
         run: dart analyze
 
       - name: Run tests
