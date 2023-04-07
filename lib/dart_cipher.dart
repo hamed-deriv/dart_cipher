@@ -1,46 +1,59 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
-/// A class that provides methods for encrypting and decrypting strings.
+/// A cipher class that encrypts and decrypts strings.
 class Cipher {
-  /// Encrypts a string.
-  static String encrypt(String input) {
-    final String key = _generateKey();
-    final String encoded = base64Encode(input.codeUnits);
-    final String encrypted = _crypt(encoded, key);
+  /// Encrypts a string using a key with a random salt value.
+  static String encrypt(String message, String key) {
+    final List<int> salt = List<int>.generate(32, (_) => Random().nextInt(256));
+    final List<int> combinedKey = List<int>.from(utf8.encode(key))
+      ..addAll(salt);
+    final List<int> encryptedMessage =
+        _generateMessage(utf8.encode(message), combinedKey, true);
+    final String encodedSalt = base64.encode(salt);
+    final String encodedMessage = base64.encode(encryptedMessage);
 
-    return base64Encode('$key:$encrypted'.codeUnits);
+    return '$encodedSalt:$encodedMessage';
   }
 
-  /// Decrypts a string.
-  static String decrypt(String input) {
-    final String decoded = String.fromCharCodes(base64Decode(input));
-    final List<String> parts = decoded.split(':');
-    final String key = parts.first;
-    final String encrypted = decoded.substring(key.length + 1);
-    final String decrypted = _crypt(encrypted, key);
+  /// Decrypts a string using a key with a salt value.
+  static String decrypt(String ciphertext, String key) {
+    final List<String> parts = ciphertext.split(':');
+    final Uint8List salt = base64.decode(parts.first);
+    final List<int> combinedKey = List<int>.from(utf8.encode(key))
+      ..addAll(salt);
+    final Uint8List encryptedMessage =
+        base64.decode(ciphertext.substring(parts.first.length + 1));
+    final List<int> decryptedMessage =
+        _generateMessage(encryptedMessage, combinedKey, false);
 
-    return String.fromCharCodes(base64Decode(decrypted));
+    return utf8.decode(decryptedMessage);
   }
 
-  static String _crypt(String input, String key) {
-    final StringBuffer result = StringBuffer();
+  static List<int> _generateMessage(
+    List<int> inputBytes,
+    List<int> keyBytes,
+    bool isEncryption,
+  ) {
+    final List<int> result = <int>[];
 
-    for (int i = 0; i < input.length; i++) {
-      final int inputChar = input.codeUnitAt(i);
-      final int keyChar = key.codeUnitAt(i % key.length);
-      final int outputChar = inputChar ^ keyChar;
+    int counter = 0;
 
-      result.write(String.fromCharCode(outputChar));
+    for (int i = 0; i < inputBytes.length; i++) {
+      final int keyByte = keyBytes[counter];
+
+      inputBytes[i] = isEncryption
+          ? (inputBytes[i] ^ keyByte) + keyByte
+          : (inputBytes[i] - keyByte) ^ keyByte;
+
+      result.add(inputBytes[i]);
+
+      if (++counter == keyBytes.length) {
+        counter = 0;
+      }
     }
 
-    return '$result';
-  }
-
-  static String _generateKey() {
-    final Random random = Random.secure();
-    final List<int> key = List<int>.generate(16, (_) => random.nextInt(256));
-
-    return base64Encode(key);
+    return result;
   }
 }
