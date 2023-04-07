@@ -1,52 +1,27 @@
-# Cipher class
+# Cipher
 
-The Cipher class is a Dart class that provides methods for encrypting and decrypting strings.
+The `Cipher` class is a Dart implementation of a simple encryption algorithm. It provides methods to encrypt and decrypt strings using a key with a random salt value.
 
-### Public methods
+## Usage
 
-`String encrypt(String input)`
+### Encrypting a string
 
-This method accepts a string as input, encrypts it using a generated key, and returns the encrypted string as a base64-encoded string. The encryption algorithm used is a simple XOR cipher with the generated key.
+To encrypt a string using the `Cipher` class, you can call the `encrypt` method and pass in the message and key parameters. The method will return the encrypted message with a random salt value in the following format: `encodedSalt:encodedMessage`.
 
-### Parameters
+```dart
+String encryptedMessage = Cipher.encrypt('secret message', 'my secret key');
+print(encryptedMessage);
+```
 
-`input` (required): A string to be encrypted.
+### Decrypting a string
 
-### Returns
+To decrypt a string using the `Cipher` class, you can call the `decrypt` method and pass in the ciphertext and key parameters. The method will return the original message.
 
-A base64-encoded string representing the encrypted input.
+```dart
+String decryptedMessage = Cipher.decrypt('NlU5cHpPbGkxVnBzaXp3Y3E3M3MwZzNlcjM4RHpWQ2Q=:F4JxKj4kNC/7Wwl2tN/AC1TmTt/8moNerTHkq3I=', 'my secret key');
+print(decryptedMessage);
+```
 
-`String decrypt(String input)`
+## How it works
 
-This method accepts a base64-encoded string as input, decrypts it using the key embedded in the input, and returns the original plaintext string. The decryption algorithm used is the reverse of the encryption algorithm, which is a simple XOR cipher with the generated key.
-
-#### Parameters
-
-`input` (required): A base64-encoded string representing the encrypted input.
-
-#### Returns
-
-A string representing the original plaintext input.
-
-### Private methods
-
-`String _crypt(String input, String key)`
-This method accepts a string and a key as inputs, applies the XOR cipher using the key to each character in the input string, and returns the resulting string.
-
-#### Parameters
-
-`input` (required): A string to be encrypted or decrypted.
-
-`key` (required): A string used as the key for the XOR cipher.
-
-#### Returns
-
-A string representing the encrypted or decrypted input.
-
-`String _generateKey()`
-
-This method generates a random 16-byte key and returns it as a base64-encoded string.
-
-#### Returns
-
-A base64-encoded string representing the generated key.
+The Cipher class generates a random 32-byte salt value and combines it with the key using the UTF-8 encoding. The resulting byte array is used as a key to encrypt or decrypt the input message. The algorithm uses a simple byte-by-byte XOR operation, combined with an addition or subtraction of the key byte value. The key bytes are cycled through for each byte of the input message. The resulting encrypted message is base64 encoded along with the salt value and returned as a string in the format `encodedSalt:encodedMessage`.
